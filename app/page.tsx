@@ -1,103 +1,171 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { FaPlusCircle } from "react-icons/fa";
+
+interface Routine {
+  title: string;
+  description: string;
+  tasks: string;
+}
+export default function Routines() {
+  const [formData, setFormData] = useState<Routine>({
+    title: "",
+    description: "",
+    tasks: "",
+  });
+
+  const [data, setData] = useState<Routine[]>([]);
+  const { title, description, tasks } = formData;
+  const [showForm, setShowForm] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (title && description && tasks) {
+      axios
+        .post("https://jsonplaceholder.typicode.com/posts", formData)
+        .then((res) => console.log("RES:", res.data))
+        .catch((err) => console.log(err));
+      setData([...data, formData]);
+      setFormData({ title: "", description: "", tasks: "" });
+      setShowForm(false);
+    }
+  };
+
+  const handleDelete = (index: number) => {
+    const newData = data.filter((item, i) => i !== index);
+    setData(newData);
+  };
+
+  const handleEdit = (index: number) => {
+    const ItemToEdit = data[index];
+    setFormData(ItemToEdit);
+    handleDelete(index);
+    setShowForm(true);
+  };
+
+  useEffect(() => {
+    axios
+      .get("https://jsonplaceholder.typicode.com/posts")
+      .then((res) => console.log("ALL DATA:", res.data))
+      .catch((err) => console.log(err));
+
+    // console.log(data);
+  }, [data]);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="">
+      <button
+        onClick={() => setShowForm(true)}
+        className="fixed bottom-6 right-6 bg-[rgb(255,208,102)] text-white rounded-full w-16 h-16 flex items-center justify-center shadow-xl hover:bg-yellow-500 hover:scale-110 transition-transform duration-200 z-50"
+      >
+        <FaPlusCircle size={36} />
+      </button>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {showForm && (
+        <div className="fixed inset-0 z-50 bg-black/10 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative">
+            <h1 className="font-bold text-base md:text-xl mb-5">Add Routine</h1>
+
+            <button
+              onClick={() => setShowForm(false)}
+              className="absolute top-2 right-3 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-xl hover:bg-yellow-500 hover:scale-110 transition-transform duration-200 z-50"
+            >
+              &times;
+            </button>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <label htmlFor="id"></label>
+              Title
+              <input
+                id="title"
+                name="title"
+                type="text"
+                value={formData.title}
+                className="border p-2 rounded-md w-full mt-2"
+                onChange={handleChange}
+              />
+              {/* Description */}
+              <label htmlFor="description"></label>
+              Description
+              <input
+                id="description"
+                name="description"
+                type="text"
+                value={formData.description}
+                className="border p-2 rounded-md w-full mt-2"
+                onChange={handleChange}
+              />
+              {/* Tasks */}
+              <label htmlFor="tasks"></label>
+              Tasks
+              <input
+                id="tasks"
+                name="tasks"
+                type="text"
+                value={formData.tasks}
+                className="border p-2 rounded-md w-full mt-2"
+                onChange={handleChange}
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Save Routine
+              </button>
+            </form>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
+      {/* Routine Lists*/}
+      <div className="place-content-center mt-5 p-2">
+        <table className="table-auto border-collapse border border-gray-300 max-w-3xl w-full mx-auto">
+          <thead>
+            <tr className="bg-gray-200 text-sm md:text-base">
+              <th className="border border-gray-300 px-4 py-2">Title</th>
+              <th>Description</th>
+              <th>Tasks</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item, index) => (
+              <tr key={index} className="text-center text-[9px] md:text-base">
+                <td className="border border-gray-300 px-4 py-2">
+                  {item.title}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {item.description}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {item.tasks}
+                </td>
+
+                <td className="space-x-2 md:space-x-3">
+                  <button
+                    className="px-3 md:px-4 py-1 bg-blue-600 text-white text-[9px] md:text-sm rounded"
+                    onClick={() => handleEdit(index)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="px-1 md:px-4 py-1 bg-red-600 text-white text-[9px] md:text-sm rounded"
+                    onClick={() => handleDelete(index)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
